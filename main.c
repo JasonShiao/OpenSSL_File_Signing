@@ -19,7 +19,8 @@
 
 #include <assert.h>
 
-int add_ext(X509 *cert, int nid, char *value);
+int add_ext(X509 *CA_cert, X509 *new_cert, int nid, char *value);
+X509* CreateCertificate(X509_REQ* csr, X509 *CA_cert, EVP_PKEY *CA_pkey);
 
 int main()
 {
@@ -317,8 +318,15 @@ int main()
 	/**********************************************************************/
 	/*               Sign a certificate based on the CSR                  */
 	/**********************************************************************/
+	X509 * endpoint_cert;
+	endpoint_cert = X509_new();
 	
-
+	endpoint_cert = CreateCertificate(endpoint_cert_req, CA_cert, CA_pkey);
+	/* Write the certificate into a .pem file or directly print with stderr */
+	FILE *endpoint_cert_fp;
+	fopen_s(&endpoint_cert_fp, "endpoint.crt.pem", "w");
+	PEM_write_X509(endpoint_cert_fp, endpoint_cert);
+	fclose(endpoint_cert_fp);
 
 
 #endif
@@ -442,4 +450,36 @@ int add_ext(X509 *CA_cert, X509 *new_cert, int nid, char *value)
 	X509_add_ext(new_cert, ex, -1);
 	X509_EXTENSION_free(ex);
 	return 1;
+}
+
+
+X509* CreateCertificate(X509_REQ* csr, X509 *CA_cert, EVP_PKEY *CA_pkey)
+{
+
+	X509 *m_req_reply;
+	m_req_reply = X509_new();
+
+	X509_NAME *subject = NULL;
+	EVP_PKEY *pkey = NULL;
+
+	ASN1_INTEGER_set(X509_get_serialNumber(m_req_reply), 2);
+	X509_gmtime_adj(X509_get_notBefore(m_req_reply), 0);
+	X509_gmtime_adj(X509_get_notAfter(m_req_reply), 31536000L);
+	pkey = X509_REQ_get_pubkey(csr);
+	X509_set_pubkey(m_req_reply, pkey);
+
+	// issuer
+	X509_NAME *issuerSubject = X509_get_subject_name(CA_cert);
+	X509_set_issuer_name(m_req_reply, issuerSubject);
+
+	// extract the subject of the request
+	subject = X509_REQ_get_subject_name(csr);
+	X509_set_subject_name(m_req_reply, subject);
+
+	if (X509_sign(m_req_reply, CA_pkey, EVP_sha256()))
+		printf("client cert ok\n");
+	else
+		printf("client cert error\n");
+
+	return m_req_reply;
 }

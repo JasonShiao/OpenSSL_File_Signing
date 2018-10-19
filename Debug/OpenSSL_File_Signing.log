@@ -1,20 +1,3 @@
 ﻿  main.c
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(103): warning C4047: '函式': 'int' 與 'X509 *' 間接取值的層級不同
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(103): warning C4024: 'add_ext': 型式和實質參數 2 不同的類型
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(103): warning C4047: '函式': 'char *' 與 'int' 間接取值的層級不同
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(103): warning C4024: 'add_ext': 型式和實質參數 3 不同的類型
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(103): warning C4020: 'add_ext': 實質參數太多
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(104): warning C4047: '函式': 'int' 與 'X509 *' 間接取值的層級不同
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(104): warning C4024: 'add_ext': 型式和實質參數 2 不同的類型
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(104): warning C4047: '函式': 'char *' 與 'int' 間接取值的層級不同
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(104): warning C4024: 'add_ext': 型式和實質參數 3 不同的類型
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(104): warning C4020: 'add_ext': 實質參數太多
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(105): warning C4047: '函式': 'int' 與 'X509 *' 間接取值的層級不同
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(105): warning C4024: 'add_ext': 型式和實質參數 2 不同的類型
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(105): warning C4047: '函式': 'char *' 與 'int' 間接取值的層級不同
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(105): warning C4024: 'add_ext': 型式和實質參數 3 不同的類型
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(105): warning C4020: 'add_ext': 實質參數太多
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(419): warning C4028: 型式參數 2 與來自宣告的不同
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(419): warning C4028: 型式參數 3 與來自宣告的不同
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(419): warning C4029: 在函式宣告和函式定義中的型式參數清單不同
+c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(480): warning C4477: 'printf' : 格式字串 '%s' 需要 'char *' 類型的引數，但 variadic 引數 1 的類型為 'X509_NAME *'
   OpenSSL_File_Signing.vcxproj -> C:\Users\9518\Documents\GitRepo\OpenSSL_File_Signing\Debug\OpenSSL_File_Signing.exe
