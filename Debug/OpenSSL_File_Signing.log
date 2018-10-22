@@ -1,3 +1,2 @@
 ﻿  main.c
-c:\users\9518\documents\gitrepo\openssl_file_signing\openssl_file_signing\main.c(480): warning C4477: 'printf' : 格式字串 '%s' 需要 'char *' 類型的引數，但 variadic 引數 1 的類型為 'X509_NAME *'
   OpenSSL_File_Signing.vcxproj -> C:\Users\9518\Documents\GitRepo\OpenSSL_File_Signing\Debug\OpenSSL_File_Signing.exe

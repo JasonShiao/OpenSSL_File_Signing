@@ -25,6 +25,10 @@ X509* CreateCertificate(X509_REQ* csr, X509 *CA_cert, EVP_PKEY *CA_pkey);
 int main()
 {
 
+	ERR_load_BIO_strings();
+	ERR_load_crypto_strings();
+	OpenSSL_add_all_algorithms();
+
 	// Parse an existing certificate
 	/*char *path = "C:\\Users\\9518\\Documents\\Training_3\\OpenSSL_File_Signing\\OpenSSL_File_Signing\\openssl\\www.example.com.cert.pem";
 	FILE *fp = NULL;
@@ -336,18 +340,16 @@ int main()
 	/*                            Signing Message                        */
 	/*********************************************************************/
 
-	/* Generate key */
-	EVP_PKEY * pkey;
-	pkey = EVP_PKEY_new();
+	/* Read private key from endpoint.key */
+	EVP_PKEY * signing_pkey;
+	signing_pkey = EVP_PKEY_new();
 
-	RSA * rsa;
-	rsa = RSA_generate_key(
-		2048,   /* number of bits for the key - 2048 is a sensible value */
-		RSA_F4, /* exponent - RSA_F4 is defined as 0x10001L */
-		NULL,   /* callback - can be NULL if we aren't displaying progress */
-		NULL    /* callback argument - not needed in this case */
-	);
-	EVP_PKEY_assign_RSA(pkey, rsa);
+	FILE* key_fp;
+	fopen_s(&key_fp, "endpoint.key", "r");
+	PEM_read_PrivateKey(key_fp, &signing_pkey, NULL, NULL);
+	fclose(key_fp);
+
+
 
 	/* Sign the text */
 	EVP_MD_CTX *mdctx = NULL;
@@ -363,14 +365,18 @@ int main()
 	if (!(mdctx = EVP_MD_CTX_create())) goto err;
 
 	/* Initialise the DigestSign operation - SHA-256 has been selected as the message digest function in this example */
-	if (1 != EVP_DigestSignInit(mdctx, NULL, EVP_sha256(), NULL, pkey)) goto err;
+	if (1 != EVP_DigestSignInit(mdctx, NULL, EVP_sha256(), NULL, signing_pkey))
+	{
+		printf("Private key set error\n");
+		goto err;
+	}
 
 	/* Call update with the message */
 	if (1 != EVP_DigestSignUpdate(mdctx, msg, strlen(msg))) goto err;
 
 	/* Finalise the DigestSign operation */
-	/* First call EVP_DigestSignFinal with a NULL sig parameter to obtain the length of the
-	* signature. Length is returned in slen */
+	/* First call EVP_DigestSignFinal with a NULL sig parameter to obtain the length of the signature. 
+		Length is returned in slen */
 	if (1 != EVP_DigestSignFinal(mdctx, NULL, &slen)) goto err;
 	/* Allocate memory for the signature based on size in slen */
 	if (!(*sig = OPENSSL_malloc(sizeof(unsigned char) * slen))) goto err;
@@ -379,7 +385,7 @@ int main()
 
 	/* Success */
 	FILE *fp2;
-	fopen_s(&fp2, "signature.sha256", "w");
+	fopen_s(&fp2, "text.sha256.signature", "w");
 
 	fwrite(*sig, 1, slen, fp2);
 
@@ -393,11 +399,40 @@ int main()
 	/*                       Signature Verification                      */
 	/*********************************************************************/
 
-	/* Initialize `key` with a public key */
-	if (1 != EVP_DigestVerifyInit(mdctx, NULL, EVP_sha256(), NULL, pkey)) goto err;
+	const char cert_filestr[] = "endpoint.crt.pem";
 
-	if (1 != EVP_DigestVerifyUpdate(mdctx, msg, strlen(msg))) goto err;
+	EVP_PKEY *endpoint_pubkey;
+	endpoint_pubkey = EVP_PKEY_new();
 
+	/* Read public key from endpoint certificate */
+	/*certbio = BIO_new(BIO_s_file());
+	ret = BIO_read_filename(certbio, cert_filestr);
+	if (!(cert = PEM_read_bio_X509(certbio, NULL, 0, NULL))) {
+		printf("Error loading cert into memory\n");
+	}
+
+	if ((endpoint_pubkey = X509_get_pubkey(cert)) == NULL)
+		printf("Error getting public key from certificate");*/
+
+	FILE *cert_fp;
+	fopen_s(&cert_fp, cert_filestr, "r");
+	endpoint_pubkey = PEM_read_PUBKEY(cert_fp, &endpoint_pubkey, NULL, NULL);
+	fclose(cert_fp);
+
+
+	/* Initialize the Hash function and the public key */
+	if (1 != EVP_DigestVerifyInit(mdctx, NULL, EVP_sha256(), NULL, endpoint_pubkey))
+	{
+		printf("Public key init error\n");
+		goto err;
+	}
+	/* Input the message */
+	if (1 != EVP_DigestVerifyUpdate(mdctx, msg, strlen(msg)))
+	{
+		printf("message input error\n");
+		goto err;
+	}
+	/* Verify operation */
 	if (1 == EVP_DigestVerifyFinal(mdctx, *sig, slen))
 	{
 		/* Success */
@@ -419,7 +454,6 @@ err:
 	/* Clean up */
 	if (*sig && !ret) OPENSSL_free(*sig);
 	if (mdctx) EVP_MD_CTX_destroy(mdctx);
-
 
 
 
@@ -461,18 +495,24 @@ X509* CreateCertificate(X509_REQ* csr, X509 *CA_cert, EVP_PKEY *CA_pkey)
 
 	X509_NAME *subject = NULL;
 	EVP_PKEY *pkey = NULL;
+	int serial_num = 2;
+	int validity_time_in_seconds = 31536000L;
 
-	ASN1_INTEGER_set(X509_get_serialNumber(m_req_reply), 2);
+	/* Set serial number */
+	ASN1_INTEGER_set(X509_get_serialNumber(m_req_reply), serial_num);
+	/* Set validity Date */
 	X509_gmtime_adj(X509_get_notBefore(m_req_reply), 0);
-	X509_gmtime_adj(X509_get_notAfter(m_req_reply), 31536000L);
+	X509_gmtime_adj(X509_get_notAfter(m_req_reply), validity_time_in_seconds);
+
+	/* Extract the public key from CSR and set to the certificate */
 	pkey = X509_REQ_get_pubkey(csr);
 	X509_set_pubkey(m_req_reply, pkey);
 
-	// issuer
+	/* Get CA name from CA_cert and set to the certificate as issuer */
 	X509_NAME *issuerSubject = X509_get_subject_name(CA_cert);
 	X509_set_issuer_name(m_req_reply, issuerSubject);
 
-	// extract the subject of the request
+	/* Get the subject name of CSR and set to the certificate as subject */
 	subject = X509_REQ_get_subject_name(csr);
 	X509_set_subject_name(m_req_reply, subject);
 
