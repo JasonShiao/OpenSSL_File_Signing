@@ -356,8 +356,7 @@ int main()
 	ret = 0;
 	char *msg = "Test Message";
 
-	unsigned char **sig = malloc(sizeof(unsigned char*));
-	*sig = NULL;
+	unsigned char *sig = NULL;
 	
 	size_t slen;
 
@@ -379,15 +378,15 @@ int main()
 		Length is returned in slen */
 	if (1 != EVP_DigestSignFinal(mdctx, NULL, &slen)) goto err;
 	/* Allocate memory for the signature based on size in slen */
-	if (!(*sig = OPENSSL_malloc(sizeof(unsigned char) * slen))) goto err;
+	if (!(sig = OPENSSL_malloc(sizeof(unsigned char) * slen))) goto err;
 	/* Obtain the signature */
-	if (1 != EVP_DigestSignFinal(mdctx, *sig, &slen)) goto err;
+	if (1 != EVP_DigestSignFinal(mdctx, sig, &slen)) goto err;
 
 	/* Success */
 	FILE *fp2;
 	fopen_s(&fp2, "text.sha256.signature", "w");
 
-	fwrite(*sig, 1, slen, fp2);
+	fwrite(sig, 1, slen, fp2);
 
 	fclose(fp2);
 
@@ -433,7 +432,7 @@ int main()
 		goto err;
 	}
 	/* Verify operation */
-	if (1 == EVP_DigestVerifyFinal(mdctx, *sig, slen))
+	if (1 == EVP_DigestVerifyFinal(mdctx, sig, slen))
 	{
 		/* Success */
 		printf("Signature verification success!\n");
@@ -452,7 +451,7 @@ err:
 	}
 
 	/* Clean up */
-	if (*sig && !ret) OPENSSL_free(*sig);
+	if (sig && !ret) OPENSSL_free(sig);
 	if (mdctx) EVP_MD_CTX_destroy(mdctx);
 
 
